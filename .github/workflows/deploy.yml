@@ -17,7 +17,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  variables: write # needed to remember the vault SHA of the last deploy
 
 jobs:
   build:
@@ -35,21 +34,27 @@ jobs:
           token: ${{ secrets.VAULT_TOKEN }}
           path: content
 
+      - name: Restore previous vault SHA
+        id: vault-sha-cache
+        uses: actions/cache@v4
+        with:
+          path: .vault-sha
+          key: vault-sha-${{ github.run_id }}
+          restore-keys: vault-sha-
+
       - name: Check if vault changed since last deploy
         id: check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cur=$(git -C content rev-parse HEAD)
-          prev=$(gh variable get VAULT_SHA 2>/dev/null || echo "")
+          prev=$(cat .vault-sha 2>/dev/null || echo "")
           echo "vault current:  $cur"
           echo "vault previous: ${prev:-<none>}"
           if [ -n "$prev" ] && [ "$cur" = "$prev" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            gh variable set VAULT_SHA --body "$cur"
           fi
+          echo "$cur" > .vault-sha
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
