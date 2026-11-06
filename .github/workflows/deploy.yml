@@ -17,15 +17,16 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  variables: write # needed to remember the vault SHA of the last deploy
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
     steps:
       - name: Checkout site repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Checkout private vault
         uses: actions/checkout@v4
@@ -33,6 +34,22 @@ jobs:
           repository: SLCZ687/KnowledgeBase
           token: ${{ secrets.VAULT_TOKEN }}
           path: content
+
+      - name: Check if vault changed since last deploy
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cur=$(git -C content rev-parse HEAD)
+          prev=$(gh variable get VAULT_SHA 2>/dev/null || echo "")
+          echo "vault current:  $cur"
+          echo "vault previous: ${prev:-<none>}"
+          if [ -n "$prev" ] && [ "$cur" = "$prev" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            gh variable set VAULT_SHA --body "$cur"
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -53,6 +70,7 @@ jobs:
 
   deploy:
     needs: build
+    if: needs.build.outputs.changed == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
