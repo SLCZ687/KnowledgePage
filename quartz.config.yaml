@@ -7,7 +7,7 @@ configuration:
   analytics:
     provider: null
   locale: zh-CN
-  baseUrl: slcz687.github.io
+  baseUrl: slcz687.github.io/KnowledgePage
   ignorePatterns:
     - private
     - templates
@@ -121,8 +121,10 @@ plugins:
     enabled: true
   - source: "@quartz-community/og-image"
     enabled: true
+  # 本仓库作为项目站点部署在 /KnowledgePage 子路径下，根域名归个人主页仓库，
+  # 因此不能生成 CNAME（会把根域名指向本仓库）
   - source: "@quartz-community/cname"
-    enabled: true
+    enabled: false
   - source: "@quartz-community/canvas-page"
     enabled: true
   - source: "@quartz-community/content-page"
