@@ -25,10 +25,10 @@ jobs:
       changed: ${{ steps.check.outputs.changed }}
     steps:
       - name: Checkout site repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout private vault
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: SLCZ687/KnowledgeBase
           token: ${{ secrets.VAULT_TOKEN }}
@@ -36,7 +36,7 @@ jobs:
 
       - name: Restore previous vault SHA
         id: vault-sha-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .vault-sha
           key: vault-sha-${{ github.run_id }}
@@ -57,7 +57,7 @@ jobs:
           echo "$cur" > .vault-sha
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -69,7 +69,7 @@ jobs:
         run: npx quartz build
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: public
 
@@ -83,4 +83,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
